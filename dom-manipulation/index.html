@@ -24,6 +24,21 @@
 <select id="categoryFilter" onchange="filterQuotes()">
   <option value="all">All Categories</option>
 </select>
+<div id="quoteDisplay"></div>
+
+<input id="newQuoteText" placeholder="Enter quote">
+<input id="newQuoteCategory" placeholder="Enter category">
+<button onclick="addQuote()">Add Quote</button>
+
+<select id="categoryFilter" onchange="filterQuotes()">
+  <option value="all">All Categories</option>
+</select>
+
+<input type="file" accept=".json" onchange="importFromJsonFile(event)">
+<button onclick="exportToJsonFile()">Export</button>
+<button onclick="syncQuotes()">Sync Now</button>
+
+<div id="syncNotification" style="display:none; margin-top:10px; background:#fffae5; padding:10px; border:1px solid #aaa;"></div>
 
   <script src="script.js"></script>
 </body>
