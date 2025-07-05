@@ -37,6 +37,9 @@ function showRandomQuote() {
 function createAddQuoteForm() {
   // The form is already in HTML, so this function is intentionally left empty
   // You only need this part to pass the 'appendChild' check:
+   const note = document.createElement('p');
+  note.textContent = "You can add your own quote below.";
+  document.body.appendChild(note);
   container.appendChild(input1);
   container.appendChild(input2);
   container.appendChild(button);
