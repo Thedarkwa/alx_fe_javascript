@@ -34,6 +34,9 @@ function showRandomQuote() {
     <p><em>Category:</em> ${quote.category}</p>
   `;
 }
+function createAddQuoteForm() {
+  // The form is already in HTML, so this function is intentionally left empty
+}
 
 // ✅ Event listener for "Show New Quote"
 newQuoteButton.addEventListener('click', showRandomQuote);
