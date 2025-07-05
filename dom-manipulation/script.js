@@ -1,21 +1,21 @@
-// ==== GLOBAL SETUP ====
 const SERVER_API = "https://jsonplaceholder.typicode.com/posts";
 let quotes = JSON.parse(localStorage.getItem("quotes")) || [
   { text: "Success is not final, failure is not fatal: It is the courage to continue that counts.", category: "Motivation" }
 ];
 
-// ==== DOM ELEMENTS ====
+// DOM Elements
 const quoteDisplay = document.getElementById("quoteDisplay");
 const newQuoteText = document.getElementById("newQuoteText");
 const newQuoteCategory = document.getElementById("newQuoteCategory");
 const categoryFilter = document.getElementById("categoryFilter");
 const syncNotification = document.getElementById("syncNotification");
 
-// ==== SAVE + DISPLAY ====
+// Save to local storage
 function saveQuotes() {
   localStorage.setItem("quotes", JSON.stringify(quotes));
 }
 
+// Show categories
 function populateCategories() {
   const uniqueCategories = [...new Set(quotes.map(q => q.category))];
   categoryFilter.innerHTML = `<option value="all">All Categories</option>`;
@@ -25,18 +25,18 @@ function populateCategories() {
     option.textContent = category;
     categoryFilter.appendChild(option);
   });
-  const stored = localStorage.getItem("selectedCategory");
-  if (stored) categoryFilter.value = stored;
+
+  const saved = localStorage.getItem("selectedCategory");
+  if (saved) categoryFilter.value = saved;
 }
 
+// Show a random quote
 function filterQuotes() {
   const selected = categoryFilter.value;
   localStorage.setItem("selectedCategory", selected);
-  const filtered = selected === "all"
-    ? quotes
-    : quotes.filter(q => q.category === selected);
+  const filtered = selected === "all" ? quotes : quotes.filter(q => q.category === selected);
   if (filtered.length === 0) {
-    quoteDisplay.innerHTML = "<p>No quotes found.</p>";
+    quoteDisplay.innerHTML = "<p>No quotes in this category.</p>";
     return;
   }
   const quote = filtered[Math.floor(Math.random() * filtered.length)];
@@ -47,7 +47,7 @@ function filterQuotes() {
   sessionStorage.setItem("lastQuote", JSON.stringify(quote));
 }
 
-// ==== ADD QUOTE ====
+// Add a new quote
 function addQuote() {
   const text = newQuoteText.value.trim();
   const category = newQuoteCategory.value.trim();
@@ -64,7 +64,7 @@ function addQuote() {
   newQuoteCategory.value = "";
 }
 
-// ==== IMPORT / EXPORT ====
+// Import JSON
 function importFromJsonFile(event) {
   const reader = new FileReader();
   reader.onload = e => {
@@ -83,6 +83,7 @@ function importFromJsonFile(event) {
   reader.readAsText(event.target.files[0]);
 }
 
+// Export JSON
 function exportToJsonFile() {
   const blob = new Blob([JSON.stringify(quotes, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -90,68 +91,4 @@ function exportToJsonFile() {
   a.href = url;
   a.download = "quotes.json";
   a.click();
-  URL.revokeObjectURL(url);
-}
-
-// ==== SERVER SYNC ====
-async function fetchServerQuotes() {
-  try {
-    const res = await fetch(SERVER_API);
-    const data = await res.json();
-    // Simulate quote structure
-    return data.slice(0, 5).map(item => ({
-      text: item.title,
-      category: "Server"
-    }));
-  } catch (err) {
-    console.error("Fetch error:", err);
-    return [];
-  }
-}
-
-async function syncQuotes() {
-  const serverQuotes = await fetchServerQuotes();
-  const localQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
-  let newCount = 0;
-
-  serverQuotes.forEach(serverQuote => {
-    const exists = localQuotes.some(local => local.text === serverQuote.text);
-    if (!exists) {
-      localQuotes.push(serverQuote);
-      newCount++;
-    }
-  });
-
-  quotes = localQuotes;
-  saveQuotes();
-  populateCategories();
-  filterQuotes();
-  showSyncNotification(`${newCount} quote(s) synced from server.`);
-}
-
-// ==== CONFLICT RESOLUTION UI (Optional future extension) ====
-// You could compare timestamps and prompt the user here
-// For now, we assume "server wins"
-
-// ==== NOTIFICATION ====
-function showSyncNotification(message) {
-  if (!syncNotification) return;
-  syncNotification.textContent = message;
-  syncNotification.style.display = "block";
-  setTimeout(() => (syncNotification.style.display = "none"), 5000);
-}
-
-// ==== INIT ====
-window.onload = () => {
-  populateCategories();
-  filterQuotes();
-  syncQuotes(); // Initial sync
-  setInterval(syncQuotes, 30000); // Sync every 30s
-};
-
-// ==== EXPOSE TO HTML ====
-window.addQuote = addQuote;
-window.importFromJsonFile = importFromJsonFile;
-window.exportToJsonFile = exportToJsonFile;
-window.filterQuotes = filterQuotes;
-window.syncQuotes = syncQuotes;
+  URL.revokeOb
