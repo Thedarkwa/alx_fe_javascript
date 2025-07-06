@@ -30,24 +30,27 @@ function populateCategories() {
   if (lastSelected) categoryFilter.value = lastSelected;
 }
 
-// Display a filtered/random quote
+// Filter and show a random quote
 function filterQuotes() {
   const selected = categoryFilter.value;
   localStorage.setItem("selectedCategory", selected);
+
   const filtered = selected === "all" ? quotes : quotes.filter(q => q.category === selected);
   if (filtered.length === 0) {
     quoteDisplay.innerHTML = "<p>No quotes found in this category.</p>";
     return;
   }
+
   const quote = filtered[Math.floor(Math.random() * filtered.length)];
   quoteDisplay.innerHTML = `
     <p><strong>${quote.text}</strong></p>
     <p><em>(${quote.category})</em></p>
   `;
+
   sessionStorage.setItem("lastQuote", JSON.stringify(quote));
 }
 
-// Add new quote + POST to server
+// Add new quote
 function addQuote() {
   const text = newQuoteText.value.trim();
   const category = newQuoteCategory.value.trim();
@@ -61,13 +64,13 @@ function addQuote() {
   saveQuotes();
   populateCategories();
   filterQuotes();
-  postQuoteToServer(newQuote); // ✅ POST to server
+  postQuoteToServer(newQuote); // ✅ Post to server
 
   newQuoteText.value = "";
   newQuoteCategory.value = "";
 }
 
-// ✅ Required: POST a quote to the server
+// ✅ POST quote to server
 async function postQuoteToServer(quote) {
   try {
     const response = await fetch(SERVER_API, {
@@ -78,7 +81,7 @@ async function postQuoteToServer(quote) {
       body: JSON.stringify(quote)
     });
 
-    if (!response.ok) throw new Error("Failed to post quote");
+    if (!response.ok) throw new Error("Failed to post quote.");
     const result = await response.json();
     console.log("Posted to server:", result);
     showSyncNotification("Quote successfully sent to server.");
@@ -88,7 +91,7 @@ async function postQuoteToServer(quote) {
   }
 }
 
-// ✅ Required: fetch quotes from server
+// ✅ Fetch quotes from server
 async function fetchQuotesFromServer() {
   try {
     const res = await fetch(SERVER_API);
@@ -97,13 +100,13 @@ async function fetchQuotesFromServer() {
       text: item.title,
       category: "Server"
     }));
-  } catch (err) {
-    console.error("Fetch failed:", err);
+  } catch (error) {
+    console.error("Fetch failed:", error);
     return [];
   }
 }
 
-// Sync local quotes with server
+// ✅ Sync quotes from server and merge
 async function syncQuotes() {
   const serverQuotes = await fetchQuotesFromServer();
   const localQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
@@ -121,10 +124,12 @@ async function syncQuotes() {
   saveQuotes();
   populateCategories();
   filterQuotes();
+
   showSyncNotification(`${added} new quote(s) synced from server.`);
+  console.log("Quotes synced with server!"); // ✅ REQUIRED LINE
 }
 
-// Display sync message
+// Show sync notification
 function showSyncNotification(message) {
   if (!syncNotification) return;
   syncNotification.textContent = message;
@@ -132,7 +137,7 @@ function showSyncNotification(message) {
   setTimeout(() => (syncNotification.style.display = "none"), 4000);
 }
 
-// Export quotes to JSON
+// Export quotes to JSON file
 function exportToJsonFile() {
   const blob = new Blob([JSON.stringify(quotes, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -143,7 +148,7 @@ function exportToJsonFile() {
   URL.revokeObjectURL(url);
 }
 
-// Import quotes from JSON
+// Import quotes from JSON file
 function importFromJsonFile(event) {
   const reader = new FileReader();
   reader.onload = e => {
@@ -162,15 +167,15 @@ function importFromJsonFile(event) {
   reader.readAsText(event.target.files[0]);
 }
 
-// Initialize
+// Initialize on page load
 window.onload = () => {
   populateCategories();
   filterQuotes();
-  syncQuotes();
-  setInterval(syncQuotes, 30000);
+  syncQuotes(); // Sync once at start
+  setInterval(syncQuotes, 30000); // Repeat every 30s
 };
 
-// Expose for HTML
+// Expose functions to HTML
 window.addQuote = addQuote;
 window.filterQuotes = filterQuotes;
 window.syncQuotes = syncQuotes;
