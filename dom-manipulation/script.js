@@ -3,7 +3,7 @@ let quotes = JSON.parse(localStorage.getItem("quotes")) || [
   { text: "Success is not final, failure is not fatal: It is the courage to continue that counts.", category: "Motivation" }
 ];
 
-// DOM Elements
+// DOM elements
 const quoteDisplay = document.getElementById("quoteDisplay");
 const newQuoteText = document.getElementById("newQuoteText");
 const newQuoteCategory = document.getElementById("newQuoteCategory");
@@ -15,7 +15,7 @@ function saveQuotes() {
   localStorage.setItem("quotes", JSON.stringify(quotes));
 }
 
-// Show categories
+// Populate category filter
 function populateCategories() {
   const uniqueCategories = [...new Set(quotes.map(q => q.category))];
   categoryFilter.innerHTML = `<option value="all">All Categories</option>`;
@@ -25,9 +25,8 @@ function populateCategories() {
     option.textContent = category;
     categoryFilter.appendChild(option);
   });
-
-  const saved = localStorage.getItem("selectedCategory");
-  if (saved) categoryFilter.value = saved;
+  const stored = localStorage.getItem("selectedCategory");
+  if (stored) categoryFilter.value = stored;
 }
 
 // Show a random quote
@@ -47,7 +46,7 @@ function filterQuotes() {
   sessionStorage.setItem("lastQuote", JSON.stringify(quote));
 }
 
-// Add a new quote
+// Add new quote
 function addQuote() {
   const text = newQuoteText.value.trim();
   const category = newQuoteCategory.value.trim();
@@ -64,7 +63,7 @@ function addQuote() {
   newQuoteCategory.value = "";
 }
 
-// Import JSON
+// Import from JSON
 function importFromJsonFile(event) {
   const reader = new FileReader();
   reader.onload = e => {
@@ -83,7 +82,7 @@ function importFromJsonFile(event) {
   reader.readAsText(event.target.files[0]);
 }
 
-// Export JSON
+// Export to JSON
 function exportToJsonFile() {
   const blob = new Blob([JSON.stringify(quotes, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -91,4 +90,71 @@ function exportToJsonFile() {
   a.href = url;
   a.download = "quotes.json";
   a.click();
-  URL.revokeOb
+  URL.revokeObjectURL(url);
+}
+
+// ✅ Fetch quotes from server (Required Function)
+async function fetchQuotesFromServer() {
+  try {
+    const res = await fetch(SERVER_API);
+    const data = await res.json();
+    return data.slice(0, 5).map(item => ({
+      text: item.title,
+      category: "Server"
+    }));
+  } catch (err) {
+    console.error("Fetch failed:", err);
+    return [];
+  }
+}
+
+// Sync local data with server
+async function syncQuotes() {
+  const serverQuotes = await fetchQuotesFromServer();
+  const localQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
+  let newCount = 0;
+
+  serverQuotes.forEach(serverQuote => {
+    const exists = localQuotes.some(local => local.text === serverQuote.text);
+    if (!exists) {
+      localQuotes.push(serverQuote);
+      newCount++;
+    }
+  });
+
+  quotes = localQuotes;
+  saveQuotes();
+  populateCategories();
+  filterQuotes();
+  showSyncNotification(`${newCount} new quote(s) synced from server.`);
+}
+
+// Notification display
+function showSyncNotification(message) {
+  if (!syncNotification) return;
+  syncNotification.textContent = message;
+  syncNotification.style.display = "block";
+  setTimeout(() => (syncNotification.style.display = "none"), 5000);
+}
+
+// Optional: Manual Conflict Resolver Placeholder
+function resolveConflictsManually() {
+  // Future feature: Let user choose between server/local version
+  alert("Manual conflict resolution not yet implemented.");
+}
+
+// Initialize on page load
+window.onload = () => {
+  populateCategories();
+  filterQuotes();
+  syncQuotes(); // Initial sync
+  setInterval(syncQuotes, 30000); // Sync every 30 seconds
+};
+
+// Expose functions for HTML access
+window.addQuote = addQuote;
+window.filterQuotes = filterQuotes;
+window.importFromJsonFile = importFromJsonFile;
+window.exportToJsonFile = exportToJsonFile;
+window.syncQuotes = syncQuotes;
+window.fetchQuotesFromServer = fetchQuotesFromServer;
